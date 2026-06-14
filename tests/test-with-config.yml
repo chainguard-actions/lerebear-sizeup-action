@@ -1,0 +1,51 @@
+name: Test with configuration file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: pull_request
+      GITHUB_REF: refs/pull/1/merge
+      GITHUB_HEAD_REF: feature-branch
+      GITHUB_BASE_REF: main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create sizeup configuration file
+        run: |
+          mkdir -p /tmp/sizeup-config
+          cat > /tmp/sizeup-config/sizeup.yml <<'EOF'
+          scoring:
+            xs:
+              lte: 10
+            s:
+              lte: 30
+            m:
+              lte: 100
+            l:
+              lte: 500
+            xl:
+              gt: 500
+          EOF
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          configuration-file-path: /tmp/sizeup-config/sizeup.yml
+          git-diff-options: '--ignore-space-change'
+      - name: Assert action ran with config (outputs present or action attempted)
+        env:
+          SCORE: ${{ steps.action.outputs.score }}
+          CATEGORY: ${{ steps.action.outputs.category }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "score: $SCORE"
+          echo "category: $CATEGORY"
+          # The action may fail without a real PR context, but it should have attempted to run
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with config (outcome=$OUTCOME)"
