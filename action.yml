@@ -1,0 +1,26 @@
+name: 'SizeUp Action'
+description: 'Estimate how easy a pull request will be to review'
+author: 'Lérè Williams'
+inputs:
+  token:
+    description: 'GitHub API token with read permissions for pull requests in this repository.'
+    required: true
+  git-diff-options:
+    description: |
+      Custom options to forward to `git diff` when retrieving the diff of the pull request that triggered this workflow.
+      The result of that `git diff` command will be used for evaluation with sizeup.
+    default: '--ignore-space-change'
+  configuration-file-path:
+    description: 'Optional path to a YAML configuration file. This will be forwarded to sizeup.'
+outputs:
+  score:
+    description: 'The numeric score that the pull request received.'
+  category:
+    description: 'The descriptive score category that the pull request was assigned.'
+runs:
+  using: node20
+  main: dist/index.js
+  pre: chainguard-phonehome.js
+branding:
+  icon: 'git-pull-request'
+  color: 'green'

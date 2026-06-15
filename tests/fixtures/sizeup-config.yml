@@ -1,0 +1,18 @@
+# SizeUp configuration file
+# Defines thresholds for PR size categories
+scoring:
+  weights:
+    lines_changed: 0.5
+    files_changed: 0.3
+    comments: 0.2
+categories:
+  - name: xs
+    threshold: 10
+  - name: s
+    threshold: 30
+  - name: m
+    threshold: 100
+  - name: l
+    threshold: 500
+  - name: xl
+    threshold: .inf
