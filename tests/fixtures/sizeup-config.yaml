@@ -1,0 +1,5 @@
+thresholds:
+  xs: 10
+  s: 30
+  m: 100
+  l: 500

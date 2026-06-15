@@ -1,0 +1,103 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "configuration",
+    "description": "YAML configuration accepted by sizeup-action",
+    "type": "object",
+    "properties": {
+        "labeling": {
+            "description": "Configuration that controls how we apply score category labels to each assessed pull request",
+            "type": "object",
+            "properties": {
+                "applyCategoryLabels": {
+                    "description": "Whether or not to apply the category label to each assessed pull request",
+                    "type": "boolean",
+                    "default": true
+                },
+                "excludeDraftPullRequests": {
+                    "description": "Whether or not to skip applying the category label to a draft pull request",
+                    "type": "boolean",
+                    "default": false
+                },
+                "categoryLabelPrefix": {
+                    "description": "The prefix to add to each category label that we apply",
+                    "type": "string",
+                    "default": "sizeup/"
+                }
+            }
+        },
+        "commenting": {
+            "description": "Configuration that controls how we add comments to assessed pull requests",
+            "type": "object",
+            "properties": {
+                "addCommentWhenScoreThresholdHasBeenExceeded": {
+                    "description": "Whether or not to add a comment to each assessed pull request that exceeds the configured score threshold",
+                    "type": "boolean",
+                    "default": true
+                },
+                "excludeDraftPullRequests": {
+                    "description": "Whether or not to skip commenting on a draft pull request that exceeds the configured score threshold",
+                    "type": "boolean",
+                    "default": true
+                },
+                "scoreThreshold": {
+                    "description": "The score above which this tool will post a comment on the pull request.",
+                    "type": "number",
+                    "default": 100
+                },
+                "commentTemplate": {
+                    "description": "The template for the comment that should be added to each pull request that exceeds the configured score threshold",
+                    "type": "string",
+                    "default": "👋 {{author}} this pull request exceeds the recommended reviewability score threshold of {{threshold}}. Your actual score was {{score}}.\n\n[Research](https://www.cabird.com/static/93aba3256c80506d3948983db34d3ba3/rigby2013convergent.pdf) has shown that this makes it harder for reviewers to provide quality feedback.\n\nWe recommend that you reduce the size of this PR by separating commits into stacked PRs."
+                }
+            }
+        },
+        "optIns": {
+            "description": "A list of GitHub handles for users or teams that have opted into this workflow",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string"
+            }
+        },
+        "shadowOptOuts": {
+            "description": "Whether or not to compute a score even for users who have opted out of the workflow",
+            "type": "boolean",
+            "default": false
+        },
+        "artifacts": {
+            "description": "Configuration options for persisting the output of this workflow.",
+            "type": "object",
+            "properties": {
+                "score": {
+                    "description": "Configuration for the workflow artifact that contains details about the score",
+                    "type": "object",
+                    "properties": {
+                        "format": {
+                            "description": "The file format to use for the score artifact",
+                            "type": "string",
+                            "enum": ["csv", "json"]
+                        },
+                        "retention": {
+                            "description": "Retention period (in days) for the score artifact. The actual retention period used may be shorter than this in the presence of an overriding repository- or organization- level retention period setting.",
+                            "type": "number"
+                        },
+                        "excludeDraftPullRequests": {
+                            "description": "Whether or not to skip creating the artifact for workflow runs on a draft pull request",
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "required": [
+                        "format"
+                    ]
+                }
+            },
+            "required": [
+                "score"
+            ]
+        },
+        "sizeup": {
+            "$ref": "https://raw.githubusercontent.com/lerebear/sizeup/main/src/config/schema.json"
+        }
+    }
+}
