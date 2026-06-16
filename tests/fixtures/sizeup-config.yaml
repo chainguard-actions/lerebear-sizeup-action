@@ -1,0 +1,10 @@
+categories:
+  - name: xs
+    lte: 10
+  - name: s
+    lte: 50
+  - name: m
+    lte: 200
+  - name: l
+    lte: 500
+  - name: xl
