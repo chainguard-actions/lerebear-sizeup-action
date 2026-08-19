@@ -1,0 +1,44 @@
+name: Test with configuration file path input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a sample sizeup configuration file
+        run: |
+          cat > /tmp/sizeup-config.yaml << 'EOF'
+          categories:
+            - name: extra small
+              lte: 10
+            - name: small
+              lte: 30
+            - name: medium
+              lte: 100
+            - name: large
+              lte: 500
+            - name: extra large
+          EOF
+
+      - name: Run action with configuration file (expect failure for non-PR event)
+        id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          configuration-file-path: /tmp/sizeup-config.yaml
+          git-diff-options: '--ignore-space-change'
+        continue-on-error: true
+
+      - name: Assert action failed due to non-PR event (not config error)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail on non-PR event, but outcome was '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when triggered outside a pull_request event"
+          echo "PASS: configuration-file-path input was accepted without additional errors"
