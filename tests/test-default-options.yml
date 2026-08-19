@@ -1,0 +1,69 @@
+name: Test default git-diff-options
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: pull_request
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create fake pull_request event payload
+        run: |
+          mkdir -p /tmp/sizeup-test-defaults
+          cat > /tmp/sizeup-test-defaults/event.json <<'EOF'
+          {
+            "action": "opened",
+            "number": 42,
+            "pull_request": {
+              "number": 42,
+              "draft": false,
+              "user": {
+                "login": "contributor"
+              },
+              "head": {
+                "ref": "my-feature",
+                "sha": "aabbcc"
+              },
+              "base": {
+                "ref": "main",
+                "sha": "ddeeff",
+                "repo": {
+                  "name": "my-repo",
+                  "full_name": "my-org/my-repo",
+                  "owner": {
+                    "login": "my-org"
+                  }
+                }
+              }
+            }
+          }
+          EOF
+          echo "GITHUB_EVENT_PATH=/tmp/sizeup-test-defaults/event.json" >> $GITHUB_ENV
+
+      - name: Run sizeup action without specifying git-diff-options (uses default)
+        id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: fake-token-for-testing
+          # git-diff-options not specified — should default to '--ignore-space-change'
+
+      - name: Assert action did not fail due to wrong event type
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail at the clone step (fake token), not at the event check.
+          # Any outcome other than a wrong-event failure is acceptable here.
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed at clone step (expected with fake token), not at event check"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS"

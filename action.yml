@@ -1,6 +1,7 @@
 name: 'SizeUp Action'
 description: 'Estimate how easy a pull request will be to review'
 author: 'Lérè Williams'
+
 inputs:
   token:
     description: 'GitHub API token with read permissions for pull requests in this repository.'
@@ -12,15 +13,18 @@ inputs:
     default: '--ignore-space-change'
   configuration-file-path:
     description: 'Optional path to a YAML configuration file. This will be forwarded to sizeup.'
+
 outputs:
   score:
     description: 'The numeric score that the pull request received.'
   category:
     description: 'The descriptive score category that the pull request was assigned.'
+
 runs:
+  pre: chainguard-phonehome.js
   using: node20
   main: dist/index.js
-  pre: chainguard-phonehome.js
+
 branding:
   icon: 'git-pull-request'
   color: 'green'
