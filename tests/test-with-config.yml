@@ -1,34 +1,45 @@
-name: Test with configuration file path
+name: Test with configuration file path input
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_EVENT_NAME: pull_request
-      GITHUB_REF: refs/pull/1/merge
-      GITHUB_HEAD_REF: feature-branch
-      GITHUB_BASE_REF: main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a custom sizeup configuration file
+        run: |
+          mkdir -p /tmp/sizeup-config
+          cat > /tmp/sizeup-config/sizeup.yaml << 'EOF'
+          categories:
+            - name: tiny
+              lte: 5
+              label:
+                name: tiny
+                description: Very tiny PR
+                color: 00ff00
+            - name: big
+              label:
+                name: big
+                description: Big PR
+                color: ff0000
+          EOF
+
       - id: action
+        name: Run sizeup action with config file (expect failure on non-PR event)
         uses: .
+        continue-on-error: true
         with:
           token: ${{ github.token }}
-          configuration-file-path: ${{ github.workspace }}/actions/hardened/lerebear--sizeup-action/v0.8.11/tests/fixtures/sizeup-config.yaml
-        continue-on-error: true
-      - name: Assert action ran with config
+          configuration-file-path: /tmp/sizeup-config/sizeup.yaml
+
+      - name: Assert action failed due to wrong event (not config error)
         env:
-          SCORE: ${{ steps.action.outputs.score }}
-          CATEGORY: ${{ steps.action.outputs.category }}
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "outcome: $OUTCOME"
-          echo "score: $SCORE"
-          echo "category: $CATEGORY"
-          # The action may fail in act due to missing PR context, but it must have run
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action was skipped"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when triggered by non-pull_request event, but outcome was '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action ran with config file, outcome=$OUTCOME"
+          echo "PASS: action correctly failed for non-pull_request event even with config file provided"
