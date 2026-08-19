@@ -1,0 +1,22 @@
+name: SizeUp
+
+on: pull_request
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sizeup:
+    name: Estimate reviewability
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Estimate pull request reviewability
+        uses: lerebear/sizeup-action@ed1dfed124077e91d3736a1acfddded03aff4c91 # v0.8.2
+        id: sizeup-action
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          # Uncomment line below to use custom sizeup-action configuration.
+          # configuration-file-path: ".github/workflows/sizeup/config.yaml"
